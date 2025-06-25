@@ -18,7 +18,7 @@
   <button onclick="enviarMensaje()">Enviar</button>
 
   <script>
-    // Generar un UUID simple para session_id
+    // Generar un UUID para session_id persistente en localStorage
     function generarUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0,
@@ -51,7 +51,6 @@
       try {
         const respuesta = await fetch("https://bot-wine.onrender.com/chat", {
           method: "POST",
-          mode: "cors",  // <-- aquí
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mensaje: mensaje,
@@ -71,7 +70,7 @@
       }
     }
 
-    // Opcional: enviar mensaje con Enter
+    // Enviar mensaje con Enter
     document.getElementById("mensaje").addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
         enviarMensaje();
