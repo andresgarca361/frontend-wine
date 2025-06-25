@@ -14,22 +14,22 @@
 <body>
   <h1>Chatbot de Vinos</h1>
   <div id="chat"></div>
-  <input type="text" id="mensaje" placeholder="Escribe tu mensaje..." style="width: 80%;" />
+  <input type="text" id="mensaje" placeholder="Escribe tu mensaje..." style="width: 80%;" autocomplete="off" />
   <button onclick="enviarMensaje()">Enviar</button>
 
   <script>
-    const chat = document.getElementById("chat");
-
-    // Función para generar un UUID v4 simple
+    // Generar un UUID simple para session_id
     function generarUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        const r = Math.random() * 16 | 0,
+              v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
       });
     }
 
-    // Generar session_id único una vez
-    const session_id = generarUUID();
+    const chat = document.getElementById("chat");
+    const session_id = localStorage.getItem("session_id") || generarUUID();
+    localStorage.setItem("session_id", session_id);
 
     function agregarMensaje(texto, clase) {
       const div = document.createElement("div");
@@ -46,9 +46,10 @@
 
       agregarMensaje("Cliente: " + mensaje, "cliente");
       mensajeInput.value = "";
+      mensajeInput.focus();
 
       try {
-        const respuesta = await fetch("http://localhost:8888/chat", {
+        const respuesta = await fetch("https://bot-wine.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -58,7 +59,7 @@
         });
 
         if (!respuesta.ok) {
-          agregarMensaje("Error: no se pudo conectar con el servidor.", "bot");
+          agregarMensaje("Error del servidor: " + respuesta.statusText, "bot");
           return;
         }
 
@@ -68,6 +69,13 @@
         agregarMensaje("Error al conectar con el servidor.", "bot");
       }
     }
+
+    // Opcional: enviar mensaje con Enter
+    document.getElementById("mensaje").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        enviarMensaje();
+      }
+    });
   </script>
 </body>
 </html>
