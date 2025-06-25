@@ -1,79 +1,58 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Chatbot de Vinos</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 2rem; background: #f4f4f9; }
-  #chatbox { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
-  #messages { height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 1rem; border-radius: 6px; background: #fafafa; }
-  .message { margin-bottom: 1rem; }
-  .cliente { color: #0055aa; font-weight: bold; }
-  .bot { color: #222; }
-  #inputForm { margin-top: 1rem; display: flex; }
-  #inputText { flex: 1; padding: 0.5rem; font-size: 1rem; border-radius: 4px; border: 1px solid #ccc; }
-  #sendBtn { padding: 0.5rem 1rem; font-size: 1rem; margin-left: 0.5rem; border-radius: 4px; border: none; background: #0055aa; color: white; cursor: pointer; }
-  #sendBtn:disabled { background: #999; cursor: not-allowed; }
-</style>
+  <meta charset="UTF-8">
+  <title>Chatbot de Vinos</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+    .msg { margin: 5px 0; }
+    .cliente { font-weight: bold; color: #0066cc; }
+    .bot { color: #333; }
+  </style>
 </head>
 <body>
+  <h1>Chatbot de Vinos</h1>
+  <div id="chat"></div>
+  <input type="text" id="mensaje" placeholder="Escribe tu mensaje..." style="width: 80%;">
+  <button onclick="enviarMensaje()">Enviar</button>
 
-<div id="chatbox">
-  <div id="messages"></div>
-  <form id="inputForm">
-    <input type="text" id="inputText" autocomplete="off" placeholder="Escribe tu mensaje..." required />
-    <button type="submit" id="sendBtn">Enviar</button>
-  </form>
-</div>
+  <script>
+    const chat = document.getElementById("chat");
+    const session_id = "usuario123"; // ← clave para mantener el contexto
 
-<script>
-  const messagesDiv = document.getElementById("messages");
-  const inputForm = document.getElementById("inputForm");
-  const inputText = document.getElementById("inputText");
-  const sendBtn = document.getElementById("sendBtn");
-
-  function appendMessage(text, sender) {
-    const msgDiv = document.createElement("div");
-    msgDiv.classList.add("message");
-    msgDiv.classList.add(sender);
-    msgDiv.textContent = (sender === "cliente" ? "Cliente: " : "Bot de Vinos: ") + text;
-    messagesDiv.appendChild(msgDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
-
-  async function sendMessage(message) {
-    sendBtn.disabled = true;
-    try {
-      const resp = await fetch("https://bot-wine.onrender.com/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensaje: message }),
-      });
-      const data = await resp.json();
-      if (data.respuesta) {
-        appendMessage(data.respuesta, "bot");
-      } else {
-        appendMessage("Error: no recibí respuesta.", "bot");
-      }
-    } catch (error) {
-      appendMessage("Error de conexión con el servidor.", "bot");
+    function agregarMensaje(texto, clase) {
+      const div = document.createElement("div");
+      div.className = "msg " + clase;
+      div.innerText = texto;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
     }
-    sendBtn.disabled = false;
-  }
 
-  inputForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const message = inputText.value.trim();
-    if (!message) return;
-    appendMessage(message, "cliente");
-    inputText.value = "";
-    sendMessage(message);
-  });
+    async function enviarMensaje() {
+      const mensajeInput = document.getElementById("mensaje");
+      const mensaje = mensajeInput.value.trim();
+      if (!mensaje) return;
 
-  // Mensaje inicial
-  appendMessage("¡Bienvenido al soporte de vinos! Escribe aquí tu consulta.", "bot");
-</script>
+      agregarMensaje("Cliente: " + mensaje, "cliente");
+      mensajeInput.value = "";
 
+      try {
+        const respuesta = await fetch("http://localhost:8888/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mensaje: mensaje,
+            session_id: session_id  // ← se mantiene fijo en cada mensaje
+          })
+        });
+
+        const data = await respuesta.json();
+        agregarMensaje("Bot de Vinos: " + data.respuesta, "bot");
+      } catch (error) {
+        agregarMensaje("Error al conectar con el servidor.", "bot");
+      }
+    }
+  </script>
 </body>
 </html>
