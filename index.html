@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Chatbot de Vinos</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
@@ -14,12 +14,22 @@
 <body>
   <h1>Chatbot de Vinos</h1>
   <div id="chat"></div>
-  <input type="text" id="mensaje" placeholder="Escribe tu mensaje..." style="width: 80%;">
+  <input type="text" id="mensaje" placeholder="Escribe tu mensaje..." style="width: 80%;" />
   <button onclick="enviarMensaje()">Enviar</button>
 
   <script>
     const chat = document.getElementById("chat");
-    const session_id = "usuario123"; // ← clave para mantener el contexto
+
+    // Función para generar un UUID v4 simple
+    function generarUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    // Generar session_id único una vez
+    const session_id = generarUUID();
 
     function agregarMensaje(texto, clase) {
       const div = document.createElement("div");
@@ -43,9 +53,14 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mensaje: mensaje,
-            session_id: session_id  // ← se mantiene fijo en cada mensaje
+            session_id: session_id
           })
         });
+
+        if (!respuesta.ok) {
+          agregarMensaje("Error: no se pudo conectar con el servidor.", "bot");
+          return;
+        }
 
         const data = await respuesta.json();
         agregarMensaje("Bot de Vinos: " + data.respuesta, "bot");
