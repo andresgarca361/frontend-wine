@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <title>Chatbot de Vinos</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #chat { border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto; margin-bottom:10px; }
-    .msg { margin:5px 0; }
-    .cliente { font-weight:bold; color:#0066cc; }
-    .bot { color:#333; }
+    body { font-family:Arial,sans-serif; padding:20px; }
+    #chat { border:1px solid#ccc; padding:10px; height:300px; overflow:auto; margin-bottom:10px; }
+    .msg{margin:5px 0;}
+    .cliente{font-weight:bold;color:#0066cc;}
+    .bot{color:#333;}
   </style>
 </head>
 <body>
@@ -16,55 +16,32 @@
   <div id="chat"></div>
   <input id="mensaje" style="width:80%;" placeholder="Escribe tu mensaje..." autocomplete="off"/>
   <button onclick="enviarMensaje()">Enviar</button>
-
   <script>
-    // Generar y persistir session_id
-    function generarUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random()*16|0, v = c=='x'? r : (r&0x3|0x8);
-        return v.toString(16);
-      });
+    function uuid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c=='x'?r:(r&3|8);return v.toString(16);});
     }
-    const session_id = localStorage.getItem("session_id") || generarUUID();
-    localStorage.setItem("session_id", session_id);
-
-    const chat = document.getElementById("chat");
-    function agregarMensaje(texto, clase) {
-      const d = document.createElement("div");
-      d.className = "msg " + clase;
-      d.innerText = texto;
-      chat.appendChild(d);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    async function enviarMensaje() {
-      const inp = document.getElementById("mensaje");
-      const txt = inp.value.trim();
-      if (!txt) return;
-      agregarMensaje("Cliente: " + txt, "cliente");
-      inp.value = ""; inp.focus();
-
-      try {
-        const res = await fetch("https://bot-wine.onrender.com/chat", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
+    const session_id = localStorage.getItem("session_id")||uuid();
+    localStorage.setItem("session_id",session_id);
+    const chatEl = document.getElementById("chat");
+    function add(msg,cls){const d=document.createElement("div");d.className="msg "+cls;d.innerText=msg;chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;}
+    async function enviarMensaje(){
+      const inp=document.getElementById("mensaje"), txt=inp.value.trim();
+      if(!txt) return; add("Cliente: "+txt,"cliente"); inp.value=""; inp.focus();
+      try{
+        const res=await fetch("https://bot-wine.onrender.com/chat",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
           body: JSON.stringify({mensaje:txt, session_id})
         });
         if(!res.ok) throw new Error(res.statusText);
-        const data = await res.json();
-        agregarMensaje("Bot de Vinos: " + data.respuesta, "bot");
-      } catch(err) {
-        agregarMensaje("Error al conectar con el servidor.", "bot");
+        const {respuesta} = await res.json();
+        add("Bot de Vinos: "+respuesta,"bot");
+      }catch(e){
+        add("Error al conectar al servidor.","bot");
       }
     }
-
-    // Enviar con Enter
-    document.getElementById("mensaje").addEventListener("keydown", e=>{
-      if(e.key==="Enter") enviarMensaje();
-    });
-
-    // Saludo inicial
-    window.onload = ()=> agregarMensaje("Bot de Vinos: ¡Bienvenido! Escribe algo para empezar.", "bot");
+    document.getElementById("mensaje").addEventListener("keydown",e=>{if(e.key==="Enter") enviarMensaje();});
+    window.onload=()=>add("Bot de Vinos: ¡Bienvenido! Escribe algo para empezar.","bot");
   </script>
 </body>
 </html>
