@@ -51,6 +51,7 @@
       try {
         const respuesta = await fetch("https://bot-wine.onrender.com/chat", {
           method: "POST",
+          mode: "cors",  // <-- aquí
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mensaje: mensaje,
